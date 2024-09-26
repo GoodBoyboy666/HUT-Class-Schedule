@@ -1,6 +1,6 @@
 ﻿namespace HUT_Class_Schedule
 {
-    partial class Form1
+    partial class MainWindow
     {
         /// <summary>
         ///  Required designer variable.

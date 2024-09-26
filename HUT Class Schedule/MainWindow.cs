@@ -9,9 +9,9 @@ using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
 namespace HUT_Class_Schedule
 {
-    public partial class Form1 : Form
+    public partial class MainWindow : Form
     {
-        public Form1()
+        public MainWindow()
         {
             InitializeComponent();
         }
@@ -24,10 +24,13 @@ namespace HUT_Class_Schedule
 
         private async void Get_Schedule_Click(object sender, EventArgs e)
         {
+            //创建HttpClient实例
             HttpClient client = new HttpClient();
 
+            //处理账户密码加密
             string encodingAccount = EncodeString(textBox_Account.Text);
             string encodingPassword = EncodeString(textBox_Password.Text);
+            //组装Post请求Body
             string postData = "userAccount=" + encodingAccount + "&userPassword=&encoded=" + WebUtility.UrlEncode(encodingAccount + "%%%" + encodingPassword);
 
 
@@ -54,13 +57,14 @@ namespace HUT_Class_Schedule
             var table = html.DocumentNode.SelectSingleNode("//table");
             if (table != null)
             {
-
+                //定义课表数组
                 var tableData = new List<List<Course>>();
 
                 // 获取课表数据
                 var tbody = table.SelectSingleNode(".//tbody");
                 var rows = tbody.SelectNodes(".//tr");
 
+                //遍历课表
                 foreach (var row in rows)
                 {
                     var cells = row.SelectNodes(".//td");
@@ -90,6 +94,7 @@ namespace HUT_Class_Schedule
                     tableData.Add(rowData);
                 }
 
+                //清空DataGirdView
                 Schedule.Rows.Clear();
 
                 // 展示表格数据
@@ -122,6 +127,7 @@ namespace HUT_Class_Schedule
                 MessageBox.Show("解析课表失败！");
             }
 
+            //账户密码写入配置文件
             string path = "account.dat";
             try
             {
@@ -138,6 +144,11 @@ namespace HUT_Class_Schedule
 
         }
 
+        /// <summary>
+        /// Base64加密
+        /// </summary>
+        /// <param name="originalString">原始字符串</param>
+        /// <returns>加密字符串</returns>
         public static string EncodeString(string originalString)
         {
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(originalString);
@@ -145,6 +156,11 @@ namespace HUT_Class_Schedule
             return base64String;
         }
 
+        /// <summary>
+        /// Base64解密
+        /// </summary>
+        /// <param name="encodedString">加密字符串</param>
+        /// <returns>原始字符串</returns>
         public static string DecodeSrting(string encodedString)
         {
             byte[] decodedBytes = Convert.FromBase64String(encodedString);
@@ -152,6 +168,11 @@ namespace HUT_Class_Schedule
             return decodedString;
         }
 
+        /// <summary>
+        /// DataGirdView控件选中改变事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Schedule_SelectionChanged(object sender, EventArgs e)
         {
             if (Schedule.SelectedCells.Count > 0)
@@ -162,18 +183,35 @@ namespace HUT_Class_Schedule
             }
         }
 
+        /// <summary>
+        /// 显示密码按钮按下事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Show_Passwd_MouseDown(object sender, MouseEventArgs e)
         {
             textBox_Password.PasswordChar = '\0';
         }
 
+        /// <summary>
+        /// 显示密码按钮松开事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Show_Passwd_MouseUp(object sender, MouseEventArgs e)
         {
             textBox_Password.PasswordChar = '*';
         }
 
+        /// <summary>
+        /// 窗体加载事件
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Form1_Load(object sender, EventArgs e)
         {
+
+            //读取配置文件中的账户密码
             string path = "account.dat";
             try
             {
@@ -188,7 +226,5 @@ namespace HUT_Class_Schedule
                 Console.WriteLine("发生错误： " + ex.Message);
             }
         }
-
-
     }
 }
