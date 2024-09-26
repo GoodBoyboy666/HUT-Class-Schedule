@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>HUT_Class_Schedule</RootNamespace>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Title>$(AssemblyName)</Title>
+	<Authors>GoodBoyboy</Authors>
+	<Description>失足少女收容中心管理员</Description>
+	<RepositoryUrl>https://git.goodboyboy.top/goodboyboy/HUT_Class_Schedule</RepositoryUrl>
+	<PackageProjectUrl>https://www.goodboyboy.top/</PackageProjectUrl>
+	<NeutralLanguage>zh-Hans</NeutralLanguage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.66" />
+  </ItemGroup>
+
+</Project>
