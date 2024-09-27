@@ -237,14 +237,16 @@
             主页ToolStripMenuItem.Name = "主页ToolStripMenuItem";
             主页ToolStripMenuItem.Size = new Size(53, 24);
             主页ToolStripMenuItem.Text = "主页";
+            主页ToolStripMenuItem.Click += 主页ToolStripMenuItem_Click;
             // 
             // 关于ToolStripMenuItem
             // 
             关于ToolStripMenuItem.Name = "关于ToolStripMenuItem";
             关于ToolStripMenuItem.Size = new Size(53, 24);
             关于ToolStripMenuItem.Text = "关于";
+            关于ToolStripMenuItem.Click += 关于ToolStripMenuItem_Click;
             // 
-            // Form1
+            // MainWindow
             // 
             AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -262,7 +264,7 @@
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MainMenuStrip = menuStrip1;
             MaximizeBox = false;
-            Name = "Form1";
+            Name = "MainWindow";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "湖工大课表 1.0";
             Load += Form1_Load;

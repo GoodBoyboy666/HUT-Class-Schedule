@@ -9,10 +9,16 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Title>$(AssemblyName)</Title>
 	<Authors>GoodBoyboy</Authors>
-	<Description>失足少女收容中心管理员</Description>
+	<Description>便于Windows上查看课表</Description>
 	<RepositoryUrl>https://git.goodboyboy.top/goodboyboy/HUT_Class_Schedule</RepositoryUrl>
 	<PackageProjectUrl>https://www.goodboyboy.top/</PackageProjectUrl>
 	<NeutralLanguage>zh-Hans</NeutralLanguage>
+	<StartupObject>HUT_Class_Schedule.Program</StartupObject>
+	<Deterministic>False</Deterministic>
+	<AssemblyVersion>1.0.1.0</AssemblyVersion>
+	<FileVersion>1.0.1.0</FileVersion>
+	<SignAssembly>True</SignAssembly>
+	<Copyright>Produced by GoodBoyboy</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

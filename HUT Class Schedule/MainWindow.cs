@@ -6,6 +6,8 @@ using System.Security.Principal;
 using System.Windows.Forms;
 using HtmlAgilityPack;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
+using System.IO;
+using System.Diagnostics;
 
 namespace HUT_Class_Schedule
 {
@@ -217,14 +219,25 @@ namespace HUT_Class_Schedule
             {
                 using (StreamReader reader = new StreamReader(path))
                 {
-                    textBox_Account.Text = DecodeSrting(reader.ReadLine()??"");
-                    textBox_Password.Text = DecodeSrting(reader.ReadLine()??"");
+                    textBox_Account.Text = DecodeSrting(reader.ReadLine() ?? "");
+                    textBox_Password.Text = DecodeSrting(reader.ReadLine() ?? "");
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("发生错误： " + ex.Message);
             }
+        }
+
+        private void 主页ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start(new ProcessStartInfo("explorer.exe", "https://www.goodboyboy.top"));
+        }
+
+        private void 关于ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            About about = new About();
+            about.ShowDialog();
         }
     }
 }
