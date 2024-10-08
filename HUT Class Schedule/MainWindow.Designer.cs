@@ -48,8 +48,12 @@
             menuStrip1 = new MenuStrip();
             主页ToolStripMenuItem = new ToolStripMenuItem();
             关于ToolStripMenuItem = new ToolStripMenuItem();
+            statusStrip1 = new StatusStrip();
+            statusBar = new ToolStripProgressBar();
+            statusLabel = new ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)Schedule).BeginInit();
             menuStrip1.SuspendLayout();
+            statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // Schedule
@@ -64,9 +68,9 @@
             Schedule.ReadOnly = true;
             Schedule.RowHeadersVisible = false;
             Schedule.RowHeadersWidth = 51;
-            Schedule.RowTemplate.Height = 50;
+            Schedule.RowTemplate.Height = 60;
             Schedule.RowTemplate.Resizable = DataGridViewTriState.False;
-            Schedule.Size = new Size(1011, 482);
+            Schedule.Size = new Size(1011, 469);
             Schedule.TabIndex = 0;
             Schedule.SelectionChanged += Schedule_SelectionChanged;
             // 
@@ -86,7 +90,7 @@
             Monday.MinimumWidth = 6;
             Monday.Name = "Monday";
             Monday.ReadOnly = true;
-            Monday.Resizable = DataGridViewTriState.False;
+            Monday.Resizable = DataGridViewTriState.True;
             Monday.SortMode = DataGridViewColumnSortMode.NotSortable;
             Monday.Width = 125;
             // 
@@ -96,7 +100,7 @@
             Tuesday.MinimumWidth = 6;
             Tuesday.Name = "Tuesday";
             Tuesday.ReadOnly = true;
-            Tuesday.Resizable = DataGridViewTriState.False;
+            Tuesday.Resizable = DataGridViewTriState.True;
             Tuesday.SortMode = DataGridViewColumnSortMode.NotSortable;
             Tuesday.Width = 125;
             // 
@@ -106,7 +110,7 @@
             Wednesday.MinimumWidth = 6;
             Wednesday.Name = "Wednesday";
             Wednesday.ReadOnly = true;
-            Wednesday.Resizable = DataGridViewTriState.False;
+            Wednesday.Resizable = DataGridViewTriState.True;
             Wednesday.SortMode = DataGridViewColumnSortMode.NotSortable;
             Wednesday.Width = 125;
             // 
@@ -116,7 +120,7 @@
             Thursday.MinimumWidth = 6;
             Thursday.Name = "Thursday";
             Thursday.ReadOnly = true;
-            Thursday.Resizable = DataGridViewTriState.False;
+            Thursday.Resizable = DataGridViewTriState.True;
             Thursday.SortMode = DataGridViewColumnSortMode.NotSortable;
             Thursday.Width = 125;
             // 
@@ -126,7 +130,7 @@
             Friday.MinimumWidth = 6;
             Friday.Name = "Friday";
             Friday.ReadOnly = true;
-            Friday.Resizable = DataGridViewTriState.False;
+            Friday.Resizable = DataGridViewTriState.True;
             Friday.SortMode = DataGridViewColumnSortMode.NotSortable;
             Friday.Width = 125;
             // 
@@ -136,7 +140,7 @@
             Saturday.MinimumWidth = 6;
             Saturday.Name = "Saturday";
             Saturday.ReadOnly = true;
-            Saturday.Resizable = DataGridViewTriState.False;
+            Saturday.Resizable = DataGridViewTriState.True;
             Saturday.SortMode = DataGridViewColumnSortMode.NotSortable;
             Saturday.Width = 125;
             // 
@@ -146,7 +150,7 @@
             Sunday.MinimumWidth = 6;
             Sunday.Name = "Sunday";
             Sunday.ReadOnly = true;
-            Sunday.Resizable = DataGridViewTriState.False;
+            Sunday.Resizable = DataGridViewTriState.True;
             Sunday.SortMode = DataGridViewColumnSortMode.NotSortable;
             Sunday.Width = 125;
             // 
@@ -155,7 +159,7 @@
             More_Info.Location = new Point(1019, 135);
             More_Info.Name = "More_Info";
             More_Info.ReadOnly = true;
-            More_Info.Size = new Size(192, 439);
+            More_Info.Size = new Size(192, 426);
             More_Info.TabIndex = 1;
             More_Info.Text = "";
             // 
@@ -246,11 +250,34 @@
             关于ToolStripMenuItem.Text = "关于";
             关于ToolStripMenuItem.Click += 关于ToolStripMenuItem_Click;
             // 
+            // statusStrip1
+            // 
+            statusStrip1.ImageScalingSize = new Size(20, 20);
+            statusStrip1.Items.AddRange(new ToolStripItem[] { statusBar, statusLabel });
+            statusStrip1.Location = new Point(0, 560);
+            statusStrip1.Name = "statusStrip1";
+            statusStrip1.Size = new Size(1223, 26);
+            statusStrip1.TabIndex = 10;
+            statusStrip1.Text = "statusStrip1";
+            // 
+            // statusBar
+            // 
+            statusBar.Name = "statusBar";
+            statusBar.Size = new Size(100, 18);
+            statusBar.Visible = false;
+            // 
+            // statusLabel
+            // 
+            statusLabel.Name = "statusLabel";
+            statusLabel.Size = new Size(201, 20);
+            statusLabel.Text = "点击“获取课表”获取当前课表";
+            // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1223, 586);
+            Controls.Add(statusStrip1);
             Controls.Add(Show_Passwd);
             Controls.Add(label3);
             Controls.Add(Get_Schedule);
@@ -266,11 +293,13 @@
             MaximizeBox = false;
             Name = "MainWindow";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "湖工大课表 1.0";
+            Text = "湖工大课表 2.0";
             Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)Schedule).EndInit();
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
+            statusStrip1.ResumeLayout(false);
+            statusStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -285,6 +314,13 @@
         private Label label2;
         private Button Get_Schedule;
         private Label label3;
+        private Button Show_Passwd;
+        private MenuStrip menuStrip1;
+        private ToolStripMenuItem 主页ToolStripMenuItem;
+        private ToolStripMenuItem 关于ToolStripMenuItem;
+        private StatusStrip statusStrip1;
+        private ToolStripProgressBar statusBar;
+        private ToolStripStatusLabel statusLabel;
         private DataGridViewTextBoxColumn head;
         private DataGridViewTextBoxColumn Monday;
         private DataGridViewTextBoxColumn Tuesday;
@@ -293,9 +329,5 @@
         private DataGridViewTextBoxColumn Friday;
         private DataGridViewTextBoxColumn Saturday;
         private DataGridViewTextBoxColumn Sunday;
-        private Button Show_Passwd;
-        private MenuStrip menuStrip1;
-        private ToolStripMenuItem 主页ToolStripMenuItem;
-        private ToolStripMenuItem 关于ToolStripMenuItem;
     }
 }

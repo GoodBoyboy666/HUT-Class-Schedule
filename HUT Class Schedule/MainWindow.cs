@@ -8,6 +8,9 @@ using HtmlAgilityPack;
 using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 using System.IO;
 using System.Diagnostics;
+using System.Reflection.Metadata;
+using System.Data;
+using System.Xml.Linq;
 
 namespace HUT_Class_Schedule
 {
@@ -26,32 +29,69 @@ namespace HUT_Class_Schedule
 
         private async void Get_Schedule_Click(object sender, EventArgs e)
         {
+            statusLabel.Text = "开始请求";
+            statusBar.Visible=true;
+            statusBar.Value = 0;
+
             //创建HttpClient实例
             HttpClient client = new HttpClient();
 
-            //处理账户密码加密
-            string encodingAccount = EncodeString(textBox_Account.Text);
-            string encodingPassword = EncodeString(textBox_Password.Text);
-            //组装Post请求Body
-            string postData = "userAccount=" + encodingAccount + "&userPassword=&encoded=" + WebUtility.UrlEncode(encodingAccount + "%%%" + encodingPassword);
+            statusLabel.Text = "获取SESS中……";
+            statusBar.Value = 10;
 
+            //获取SESS
+            HttpContent getSESS = new StringContent("");
+            HttpResponseMessage SESS = await client.PostAsync("http://218.75.197.123:83/Logon.do?method=logon&flag=sess", getSESS);
+            string SESStext = await SESS.Content.ReadAsStringAsync();
+
+            if(SESStext ==""|| SESStext==null)
+            {
+                MessageBox.Show("获取SESS失败！","错误",MessageBoxButtons.OK,MessageBoxIcon.Error);
+            }
+
+            statusBar.Value = 30;
+
+            statusLabel.Text = "处理账号密码中……";
+            //处理账户密码加密
+            string encodedString = EncodeString(SESStext, textBox_Account.Text, textBox_Password.Text);
+
+            statusBar.Value = 50;
+
+            //组装Post请求Body
+            string postData = "loginMethod=logon&userlanguage=0&userAccount=" + textBox_Account.Text + "&userPassword=&encoded=" + WebUtility.UrlEncode(encodedString);
+
+            statusLabel.Text = "身份验证中……";
 
             //Post身份验证
             HttpContent content = new StringContent(postData);
             content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+            await client.PostAsync("http://218.75.197.123:83/Logon.do?method=logon", content);
 
-            await client.PostAsync("http://218.75.197.123:83/jsxsd/xk/LoginToXk", content);
+            statusBar.Value = 60;
 
+            statusLabel.Text = "获取课表请求参数中……";
 
-            //Post请求课表HTML
-            string today = DateTime.Today.ToString("yyyy-MM-dd");
-            string kbData = "rq=" + today;
+            //Get请求课表参数
+            HttpResponseMessage reKbParam= await client.GetAsync("http://jwxt.hut.edu.cn/jsxsd/framework/xsMainV_new.htmlx?t1=1");
+            string htmlKbParam=await reKbParam.Content.ReadAsStringAsync();
 
-            HttpContent kbContent = new StringContent(kbData);
-            kbContent.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-            HttpResponseMessage response = await client.PostAsync("http://218.75.197.123:83/jsxsd/framework/main_index_loadkb.jsp", kbContent);
+            //Post请求课表HTML（不要问我变量名为什么这么奇怪，问学校）
+            KbParam kbParam = GetKbParam(htmlKbParam);
+            string zhouci = kbParam.zhouci;
+            string kbjcmsid = kbParam.kbjcmsid;
+            string xnxq01id = kbParam.xnxq01id;
+            string kbURL = "http://jwxt.hut.edu.cn/jsxsd/framework/mainV_index_loadkb.htmlx?zc=" + zhouci + "&kbjcmsid=" + kbjcmsid + "&xnxq01id=" + xnxq01id + "&xswk=false";
+
+            statusBar.Value = 70;
+
+            statusLabel.Text = "请求课表中……";
+
+            HttpResponseMessage response = await client.GetAsync(kbURL);
             string result = await response.Content.ReadAsStringAsync();
 
+            statusBar.Value = 80;
+
+            statusLabel.Text = "解析课表中……";
 
             //解析课表HTML
             var html = new HtmlDocument();
@@ -74,20 +114,31 @@ namespace HUT_Class_Schedule
 
                     for (int i = 0; i < cells.Count; i++)
                     {
-                        var cell = cells[i];
-                        if (cell.SelectSingleNode(".//p") != null)
+                        var cell = cells[i].SelectSingleNode(".//div/ul/li");
+                        var head = cells[i].SelectSingleNode(".//div/div[@class='index-title']");
+                        Course course = new Course();
+                        if (cell!= null)
                         {
-                            Course course = new Course();
-                            course.courseName = cell.InnerText.Trim();
-                            // 获取p标签的 title 属性
-                            var title = cell.SelectSingleNode(".//p").GetAttributeValue("title", string.Empty);
-                            course.courseInfo = title.Replace("<br/>", "\n");
+                            
+                            course.courseName = cell.SelectSingleNode(".//div[@class='qz-hasCourse-title qz-ellipse']").InnerText.Trim();
+
+                            // 课程详细信息
+                            var infonodes = cell.SelectNodes(".//div[contains(@class, 'qz-hasCourse-detaillists')]/div");
+                            foreach (var info in infonodes)
+                            {
+                                course.courseInfo += info.InnerText.Trim()+"\n";
+                            }
+                            rowData.Add(course);
+                        }
+                        else if(head!=null)
+                        {
+                            course.courseName=head.InnerText.Trim()+"\n";
+                            course.courseInfo = head.InnerText.Trim() + "\n" + cells[i].SelectSingleNode(".//div/div[@class='index-detailtext']").InnerText.Trim() + "\n" + cells[i].SelectSingleNode(".//div/div[@class='index-detailtext qz-flex-row']/span").InnerText.Trim();
                             rowData.Add(course);
                         }
                         else
                         {
-                            Course course = new Course();
-                            course.courseName = cell.InnerText.Trim();
+                            course.courseName = " ";
                             course.courseInfo = "N/A";
                             rowData.Add(course);
                         }
@@ -129,6 +180,10 @@ namespace HUT_Class_Schedule
                 MessageBox.Show("解析课表失败！");
             }
 
+            statusBar.Value = 90;
+
+            statusLabel.Text = "保存配置文件中……";
+
             //账户密码写入配置文件
             string path = "account.dat";
             try
@@ -143,6 +198,10 @@ namespace HUT_Class_Schedule
             {
                 MessageBox.Show("发生错误： " + ex.Message);
             }
+
+            statusLabel.Text = "完成";
+
+            statusBar.Value = 100;
 
         }
 
@@ -169,6 +228,71 @@ namespace HUT_Class_Schedule
             string decodedString = System.Text.Encoding.UTF8.GetString(decodedBytes);
             return decodedString;
         }
+
+        /// <summary>
+        /// 密码加密算法
+        /// </summary>
+        /// <param name="dataStr">SEES</param>
+        /// <param name="userAccount">学号</param>
+        /// <param name="userPassword">密码</param>
+        /// <returns>加密的字符</returns>
+        public static string EncodeString(string dataStr, string userAccount, string userPassword)
+        {
+            string[] dataStrParts = dataStr.Split('#');
+            string scode = dataStrParts[0];
+            string sxh = dataStrParts[1];
+            string code = userAccount + "%%%" + userPassword;
+            string encoded = "";
+            for (int i = 0; i < code.Length; i++)
+            {
+                if (i < 20)
+                {
+                    encoded +=
+                        code.Substring(i, 1) +
+                        scode.Substring(0, int.Parse(sxh.Substring(i, 1)));
+                    scode = scode.Substring(int.Parse(sxh.Substring(i, 1)), scode.Length - int.Parse(sxh.Substring(i, 1)));
+                }
+                else
+                {
+                    encoded += code.Substring(i, code.Length - i);
+                    i = code.Length;
+                }
+            }
+
+            return encoded;
+        }
+
+        /// <summary>
+        /// 组装课表请求参数
+        /// </summary>
+        /// <param name="htmlData"></param>
+        /// <returns></returns>
+        public static KbParam GetKbParam(string htmlData)
+        {
+            //获得周次
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(htmlData);
+            HtmlNode week = doc.DocumentNode.SelectSingleNode("//select[@id='week']/option[@selected]");
+
+            //获得kbjcmsid
+            HtmlNode kbjcmsid = doc.DocumentNode.SelectSingleNode("//ul[@class='layui-tab-title']/li");
+
+            //获取学期
+            HtmlNodeCollection xnxq01id = doc.DocumentNode.SelectNodes("//select[@lay-filter='xnxq']/option");
+            string xnxq01idValue = "";
+            if (xnxq01id != null)
+            {
+                foreach (HtmlNode xnxq01idchild in xnxq01id)
+                {
+                    xnxq01idValue = xnxq01idchild.InnerHtml.Trim();
+                }
+            }
+
+            KbParam kbParam = new KbParam(week.GetAttributeValue("value", ""), kbjcmsid.GetAttributeValue("data-value", ""), xnxq01idValue);
+            return kbParam;
+        }
+
+
 
         /// <summary>
         /// DataGirdView控件选中改变事件
@@ -238,6 +362,30 @@ namespace HUT_Class_Schedule
         {
             About about = new About();
             about.ShowDialog();
+        }
+    }
+
+    /// <summary>
+    /// 课表请求参数实体类
+    /// </summary>
+
+    public class KbParam
+    {
+        public string zhouci;
+        public string kbjcmsid;
+        public string xnxq01id;
+
+        /// <summary>
+        /// 实体类构造函数
+        /// </summary>
+        /// <param name="zhouci">课表周次</param>
+        /// <param name="kbjcmsid">课表ID</param>
+        /// <param name="xnxq01id">学期</param>
+        public KbParam(string zhouci,string kbjcmsid,string xnxq01id)
+        {
+            this.zhouci = zhouci;
+            this.kbjcmsid = kbjcmsid;
+            this.xnxq01id = xnxq01id;
         }
     }
 }
