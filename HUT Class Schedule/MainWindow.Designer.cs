@@ -52,7 +52,8 @@
             statusBar = new ToolStripProgressBar();
             statusLabel = new ToolStripStatusLabel();
             label4 = new Label();
-            comboBox1 = new ComboBox();
+            ZhouCicomboBox = new ComboBox();
+            logout = new Button();
             ((System.ComponentModel.ISupportInitialize)Schedule).BeginInit();
             menuStrip1.SuspendLayout();
             statusStrip1.SuspendLayout();
@@ -283,20 +284,32 @@
             label4.TabIndex = 11;
             label4.Text = "周次：";
             // 
-            // comboBox1
+            // ZhouCicomboBox
             // 
-            comboBox1.FormattingEnabled = true;
-            comboBox1.Location = new Point(739, 44);
-            comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(68, 28);
-            comboBox1.TabIndex = 12;
+            ZhouCicomboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            ZhouCicomboBox.FormattingEnabled = true;
+            ZhouCicomboBox.Location = new Point(739, 44);
+            ZhouCicomboBox.Name = "ZhouCicomboBox";
+            ZhouCicomboBox.Size = new Size(68, 28);
+            ZhouCicomboBox.TabIndex = 12;
+            // 
+            // logout
+            // 
+            logout.Location = new Point(1037, 44);
+            logout.Name = "logout";
+            logout.Size = new Size(90, 29);
+            logout.TabIndex = 13;
+            logout.Text = "退出登录";
+            logout.UseVisualStyleBackColor = true;
+            logout.Click += logout_Click;
             // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1223, 586);
-            Controls.Add(comboBox1);
+            Controls.Add(logout);
+            Controls.Add(ZhouCicomboBox);
             Controls.Add(label4);
             Controls.Add(statusStrip1);
             Controls.Add(Show_Passwd);
@@ -351,6 +364,7 @@
         private DataGridViewTextBoxColumn Saturday;
         private DataGridViewTextBoxColumn Sunday;
         private Label label4;
-        private ComboBox comboBox1;
+        private ComboBox ZhouCicomboBox;
+        private Button logout;
     }
 }

@@ -27,8 +27,11 @@ namespace HUT_Class_Schedule
             public string courseInfo;
         }
 
-        //创建HttpClient实例
+        //初始化全局变量
         HttpClient client = new HttpClient();
+        bool FINISH = false;//成功请求标识位
+        string kbjcmsid = "";//课表ID（？）
+        string xnxq01id = "";//学年
 
         private async void Get_Schedule_Click(object sender, EventArgs e)
         {
@@ -37,23 +40,46 @@ namespace HUT_Class_Schedule
             statusBar.Visible = true;
             statusBar.Value = 0;
 
-            //身份验证
-            bool isError = await Authentication();
+            bool isError = false;//身份验证通过标识位
+            if (FINISH == false)
+            {
+                //身份验证
+                isError = await Authentication();
+            }
 
             //Get请求课表参数
             string kbURL = "";
             if (isError != true)
                 kbURL = await GetAllkbParam();
 
+
             //请求与解析课表
             if (kbURL != "")
             {
-                await GetSchedule(kbURL);
+                if (await GetSchedule(kbURL))
+                {
+                    FINISH = true;
+                    textBox_Account.Enabled=false;
+                    textBox_Password.Enabled=false;
+                    logout.Visible=true;
+                }
             }
+
+            //保存配置
+            SaveSettings();
+
+            statusLabel.Text = "完成";
+
+            statusBar.Value += 10;
 
         }
 
-        private async Task GetSchedule(string kbURL)
+        /// <summary>
+        /// 获取课表
+        /// </summary>
+        /// <param name="kbURL">课表URL</param>
+        /// <returns>是否成功获取</returns>
+        private async Task<bool> GetSchedule(string kbURL)
         {
             statusLabel.Text = "请求课表中……";
 
@@ -63,31 +89,48 @@ namespace HUT_Class_Schedule
             statusBar.Value += 10;
 
             //解析课表HTML
-            ParseSchedule(result);
-
-            //保存配置
-            SaveSettings();
-
-            statusLabel.Text = "完成";
-
-            statusBar.Value += 10;
+            if (ParseSchedule(result))
+            {
+                return true;
+            }
+            else
+                return false;
         }
 
+        /// <summary>
+        /// 获取所有课表请求参数
+        /// </summary>
+        /// <returns>课表链接</returns>
         private async Task<string> GetAllkbParam()
         {
             string kbURL = "";
+
             statusLabel.Text = "获取课表请求参数中……";
-            HttpResponseMessage reKbParam = await client.GetAsync("http://jwxt.hut.edu.cn/jsxsd/framework/xsMainV_new.htmlx?t1=1");
-            string htmlKbParam = await reKbParam.Content.ReadAsStringAsync();
+            if (FINISH == false)
+            {
+                HttpResponseMessage reKbParam = await client.GetAsync("http://jwxt.hut.edu.cn/jsxsd/framework/xsMainV_new.htmlx?t1=1");
+                string htmlKbParam = await reKbParam.Content.ReadAsStringAsync();
 
-            //Post请求课表HTML（不要问我变量名为什么这么奇怪，问学校）
-            KbParam kbParam = GetKbParam(htmlKbParam);
-            string zhouci = kbParam.zhouci;
-            string kbjcmsid = kbParam.kbjcmsid;
-            string xnxq01id = kbParam.xnxq01id;
-            kbURL = "http://jwxt.hut.edu.cn/jsxsd/framework/mainV_index_loadkb.htmlx?zc=" + zhouci + "&kbjcmsid=" + kbjcmsid + "&xnxq01id=" + xnxq01id + "&xswk=false";
+                //Post请求课表HTML（不要问我变量名为什么这么奇怪，问学校）
+                KbParam kbParam = GetKbParam(htmlKbParam);
+                string zhouciSelected = kbParam.zhouciSelected;
+                kbjcmsid = kbParam.kbjcmsid;
+                xnxq01id = kbParam.xnxq01id;
+                kbURL = "http://jwxt.hut.edu.cn/jsxsd/framework/mainV_index_loadkb.htmlx?zc=" + zhouciSelected + "&kbjcmsid=" + kbjcmsid + "&xnxq01id=" + xnxq01id + "&xswk=false";
 
-            if (zhouci == "" || kbjcmsid == "" || xnxq01id == "")
+                //将周次写入combox
+                ZhouCicomboBox.Items.Clear();
+                foreach (string zhouci in kbParam.zhouci)
+                    ZhouCicomboBox.Items.Add(zhouci);
+                ZhouCicomboBox.SelectedItem = zhouciSelected;
+            }
+            else
+            {
+                kbURL = "http://jwxt.hut.edu.cn/jsxsd/framework/mainV_index_loadkb.htmlx?zc=" + ZhouCicomboBox.SelectedItem + "&kbjcmsid=" + kbjcmsid + "&xnxq01id=" + xnxq01id + "&xswk=false";
+            }
+
+
+            if (ZhouCicomboBox?.SelectedItem?.ToString() == "" || kbjcmsid == "" || xnxq01id == "")
             {
                 MessageBox.Show("解析课表参数失败！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 kbURL = "";
@@ -99,6 +142,10 @@ namespace HUT_Class_Schedule
             return kbURL;
         }
 
+        /// <summary>
+        /// 身份认证
+        /// </summary>
+        /// <returns><是否完成身份认证/returns>
         private async Task<bool> Authentication()
         {
             //获取SESS
@@ -199,7 +246,7 @@ namespace HUT_Class_Schedule
         /// 解析课表HTML
         /// </summary>
         /// <param name="result">课表HTML</param>
-        private void ParseSchedule(string result)
+        private bool ParseSchedule(string result)
         {
             statusLabel.Text = "解析课表中……";
             var html = new HtmlDocument();
@@ -282,12 +329,16 @@ namespace HUT_Class_Schedule
                     newRow.Cells["Sunday"].ToolTipText = data[7].courseInfo;
                     rowIndex++;
                 }
+
+                statusBar.Value = 90;
+                return true;
             }
             else
             {
                 MessageBox.Show("解析课表失败！");
+                return false;
             }
-            statusBar.Value = 90;
+
         }
 
         /// <summary>
@@ -364,7 +415,14 @@ namespace HUT_Class_Schedule
             //获得周次
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(htmlData);
-            HtmlNode week = doc.DocumentNode.SelectSingleNode("//select[@id='week']/option[@selected]");
+            var weeks = doc.DocumentNode.SelectNodes("//select[@id='week']/option");
+            List<string> Stringweeks = new List<string>();
+            foreach (var weeknode in weeks)
+            {
+                Stringweeks.Add(weeknode.GetAttributeValue("value", ""));
+            }
+
+            HtmlNode selected = doc.DocumentNode.SelectSingleNode("//select[@id='week']/option[@selected]");
 
             //获得kbjcmsid
             HtmlNode kbjcmsid = doc.DocumentNode.SelectSingleNode("//ul[@class='layui-tab-title']/li");
@@ -380,7 +438,7 @@ namespace HUT_Class_Schedule
                 }
             }
 
-            KbParam kbParam = new KbParam(week?.GetAttributeValue("value", "") ?? "", kbjcmsid?.GetAttributeValue("data-value", "") ?? "", xnxq01idValue ?? "");
+            KbParam kbParam = new KbParam(Stringweeks, kbjcmsid?.GetAttributeValue("data-value", "") ?? "", xnxq01idValue ?? "", selected?.GetAttributeValue("value", "") ?? "");
             return kbParam;
         }
 
@@ -455,6 +513,19 @@ namespace HUT_Class_Schedule
             About about = new About();
             about.ShowDialog();
         }
+
+        private void logout_Click(object sender, EventArgs e)
+        {
+            client.Dispose();
+            client=new HttpClient();
+            kbjcmsid = "";
+            xnxq01id = "";
+            FINISH=false;
+            textBox_Account.Enabled=true;
+            textBox_Password.Enabled=true;
+            logout.Visible = false;
+            MessageBox.Show("您的账户已登出！","通知",MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
     }
 
     /// <summary>
@@ -463,21 +534,24 @@ namespace HUT_Class_Schedule
 
     public class KbParam
     {
-        public string zhouci;
+        public List<string> zhouci;
         public string kbjcmsid;
         public string xnxq01id;
+        public string zhouciSelected;
 
         /// <summary>
         /// 实体类构造函数
         /// </summary>
-        /// <param name="zhouci">课表周次</param>
+        /// <param name="zhouci">课表周次集合</param>
         /// <param name="kbjcmsid">课表ID</param>
         /// <param name="xnxq01id">学期</param>
-        public KbParam(string zhouci, string kbjcmsid, string xnxq01id)
+        /// /// <param name="zhouciSelected">已选中的周次</param>
+        public KbParam(List<string> zhouci, string kbjcmsid, string xnxq01id, string zhouciSelected)
         {
             this.zhouci = zhouci;
             this.kbjcmsid = kbjcmsid;
             this.xnxq01id = xnxq01id;
+            this.zhouciSelected = zhouciSelected;
         }
     }
 }
