@@ -27,21 +27,87 @@ namespace HUT_Class_Schedule
             public string courseInfo;
         }
 
+        //创建HttpClient实例
+        HttpClient client = new HttpClient();
+
         private async void Get_Schedule_Click(object sender, EventArgs e)
         {
+
             statusLabel.Text = "开始请求";
             statusBar.Visible = true;
             statusBar.Value = 0;
 
-            //创建HttpClient实例
-            HttpClient client = new HttpClient();
+            //身份验证
+            bool isError = await Authentication();
 
+            //Get请求课表参数
+            string kbURL = "";
+            if (isError != true)
+                kbURL = await GetAllkbParam();
+
+            //请求与解析课表
+            if (kbURL != "")
+            {
+                await GetSchedule(kbURL);
+            }
+
+        }
+
+        private async Task GetSchedule(string kbURL)
+        {
+            statusLabel.Text = "请求课表中……";
+
+            HttpResponseMessage response = await client.GetAsync(kbURL);
+            string result = await response.Content.ReadAsStringAsync();
+
+            statusBar.Value += 10;
+
+            //解析课表HTML
+            ParseSchedule(result);
+
+            //保存配置
+            SaveSettings();
+
+            statusLabel.Text = "完成";
+
+            statusBar.Value += 10;
+        }
+
+        private async Task<string> GetAllkbParam()
+        {
+            string kbURL = "";
+            statusLabel.Text = "获取课表请求参数中……";
+            HttpResponseMessage reKbParam = await client.GetAsync("http://jwxt.hut.edu.cn/jsxsd/framework/xsMainV_new.htmlx?t1=1");
+            string htmlKbParam = await reKbParam.Content.ReadAsStringAsync();
+
+            //Post请求课表HTML（不要问我变量名为什么这么奇怪，问学校）
+            KbParam kbParam = GetKbParam(htmlKbParam);
+            string zhouci = kbParam.zhouci;
+            string kbjcmsid = kbParam.kbjcmsid;
+            string xnxq01id = kbParam.xnxq01id;
+            kbURL = "http://jwxt.hut.edu.cn/jsxsd/framework/mainV_index_loadkb.htmlx?zc=" + zhouci + "&kbjcmsid=" + kbjcmsid + "&xnxq01id=" + xnxq01id + "&xswk=false";
+
+            if (zhouci == "" || kbjcmsid == "" || xnxq01id == "")
+            {
+                MessageBox.Show("解析课表参数失败！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                kbURL = "";
+            }
+            else
+            {
+                statusBar.Value += 20;
+            }
+            return kbURL;
+        }
+
+        private async Task<bool> Authentication()
+        {
+            //获取SESS
             await client.GetAsync("http://218.75.197.123:83/");
 
             statusLabel.Text = "获取SESS中……";
             statusBar.Value += 10;
 
-            //获取SESS
+
             HttpContent empty = new StringContent("");
             HttpResponseMessage SESS = await client.PostAsync("http://218.75.197.123:83/Logon.do?method=logon&flag=sess", empty);
             string SESStext = "";
@@ -88,7 +154,7 @@ namespace HUT_Class_Schedule
                 HtmlDocument authReslutHTML = new HtmlDocument();
                 authReslutHTML.LoadHtml(authReslutString);
                 var authReslutNode = authReslutHTML.DocumentNode.SelectSingleNode("//font[@id='showMsg']");
-                if (authReslutNode !=null)
+                if (authReslutNode != null)
                 {
                     MessageBox.Show("身份验证失败！\n" + authReslutNode.InnerText.Trim(), "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     isError = true;
@@ -103,59 +169,7 @@ namespace HUT_Class_Schedule
                 isError = true;
             }
 
-
-            //Get请求课表参数
-            string kbURL = "";
-            if (isError !=true)
-            {
-                statusLabel.Text = "获取课表请求参数中……";
-                HttpResponseMessage reKbParam = await client.GetAsync("http://jwxt.hut.edu.cn/jsxsd/framework/xsMainV_new.htmlx?t1=1");
-                string htmlKbParam = await reKbParam.Content.ReadAsStringAsync();
-
-                //Post请求课表HTML（不要问我变量名为什么这么奇怪，问学校）
-                KbParam kbParam = GetKbParam(htmlKbParam);
-                string zhouci = kbParam.zhouci;
-                string kbjcmsid = kbParam.kbjcmsid;
-                string xnxq01id = kbParam.xnxq01id;
-                kbURL = "http://jwxt.hut.edu.cn/jsxsd/framework/mainV_index_loadkb.htmlx?zc=" + zhouci + "&kbjcmsid=" + kbjcmsid + "&xnxq01id=" + xnxq01id + "&xswk=false";
-
-                if (zhouci == "" || kbjcmsid == "" || xnxq01id == "")
-                {
-                    MessageBox.Show("解析课表参数失败！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    isError = true;
-                }
-                else
-                {
-                    statusBar.Value += 20;
-                }
-            }
-            else
-            {
-                isError = true;
-            }
-
-            if (isError!=true)
-            {
-                statusLabel.Text = "请求课表中……";
-
-                HttpResponseMessage response = await client.GetAsync(kbURL);
-                string result = await response.Content.ReadAsStringAsync();
-
-                client.Dispose();
-
-                statusBar.Value += 10;
-
-                //解析课表HTML
-                ParseSchedule(result);
-
-                //保存配置
-                SaveSettings();
-
-                statusLabel.Text = "完成";
-
-                statusBar.Value += 10;
-            }
-
+            return isError;
         }
 
         /// <summary>
@@ -281,7 +295,7 @@ namespace HUT_Class_Schedule
         /// </summary>
         /// <param name="originalString">原始字符串</param>
         /// <returns>加密字符串</returns>
-        public static string EncodeString(string originalString)
+        private static string EncodeString(string originalString)
         {
             byte[] bytes = System.Text.Encoding.UTF8.GetBytes(originalString);
             string base64String = Convert.ToBase64String(bytes);
@@ -293,7 +307,7 @@ namespace HUT_Class_Schedule
         /// </summary>
         /// <param name="encodedString">加密字符串</param>
         /// <returns>原始字符串</returns>
-        public static string DecodeSrting(string encodedString)
+        private static string DecodeSrting(string encodedString)
         {
             byte[] decodedBytes = Convert.FromBase64String(encodedString);
             string decodedString = System.Text.Encoding.UTF8.GetString(decodedBytes);
@@ -307,7 +321,7 @@ namespace HUT_Class_Schedule
         /// <param name="userAccount">学号</param>
         /// <param name="userPassword">密码</param>
         /// <returns>加密的字符</returns>
-        public static string EncodeString(string dataStr, string userAccount, string userPassword)
+        private static string EncodeString(string dataStr, string userAccount, string userPassword)
         {
             if (dataStr == "")
             {
@@ -345,7 +359,7 @@ namespace HUT_Class_Schedule
         /// </summary>
         /// <param name="htmlData"></param>
         /// <returns></returns>
-        public static KbParam GetKbParam(string htmlData)
+        private static KbParam GetKbParam(string htmlData)
         {
             //获得周次
             HtmlDocument doc = new HtmlDocument();

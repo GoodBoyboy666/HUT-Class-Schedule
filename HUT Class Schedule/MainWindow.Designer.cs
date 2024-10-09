@@ -51,6 +51,8 @@
             statusStrip1 = new StatusStrip();
             statusBar = new ToolStripProgressBar();
             statusLabel = new ToolStripStatusLabel();
+            label4 = new Label();
+            comboBox1 = new ComboBox();
             ((System.ComponentModel.ISupportInitialize)Schedule).BeginInit();
             menuStrip1.SuspendLayout();
             statusStrip1.SuspendLayout();
@@ -198,7 +200,7 @@
             // 
             // Get_Schedule
             // 
-            Get_Schedule.Location = new Point(852, 44);
+            Get_Schedule.Location = new Point(852, 43);
             Get_Schedule.Name = "Get_Schedule";
             Get_Schedule.Size = new Size(161, 29);
             Get_Schedule.TabIndex = 6;
@@ -272,11 +274,30 @@
             statusLabel.Size = new Size(201, 20);
             statusLabel.Text = "点击“获取课表”获取当前课表";
             // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Location = new Point(688, 48);
+            label4.Name = "label4";
+            label4.Size = new Size(54, 20);
+            label4.TabIndex = 11;
+            label4.Text = "周次：";
+            // 
+            // comboBox1
+            // 
+            comboBox1.FormattingEnabled = true;
+            comboBox1.Location = new Point(739, 44);
+            comboBox1.Name = "comboBox1";
+            comboBox1.Size = new Size(68, 28);
+            comboBox1.TabIndex = 12;
+            // 
             // MainWindow
             // 
             AutoScaleDimensions = new SizeF(9F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1223, 586);
+            Controls.Add(comboBox1);
+            Controls.Add(label4);
             Controls.Add(statusStrip1);
             Controls.Add(Show_Passwd);
             Controls.Add(label3);
@@ -293,7 +314,7 @@
             MaximizeBox = false;
             Name = "MainWindow";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "湖工大课表 2.0.1";
+            Text = "湖工大课表 v2.0.2";
             Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)Schedule).EndInit();
             menuStrip1.ResumeLayout(false);
@@ -329,5 +350,7 @@
         private DataGridViewTextBoxColumn Friday;
         private DataGridViewTextBoxColumn Saturday;
         private DataGridViewTextBoxColumn Sunday;
+        private Label label4;
+        private ComboBox comboBox1;
     }
 }
