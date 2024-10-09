@@ -30,70 +30,164 @@ namespace HUT_Class_Schedule
         private async void Get_Schedule_Click(object sender, EventArgs e)
         {
             statusLabel.Text = "开始请求";
-            statusBar.Visible=true;
+            statusBar.Visible = true;
             statusBar.Value = 0;
 
             //创建HttpClient实例
             HttpClient client = new HttpClient();
 
+            await client.GetAsync("http://218.75.197.123:83/");
+
             statusLabel.Text = "获取SESS中……";
-            statusBar.Value = 10;
+            statusBar.Value += 10;
 
             //获取SESS
-            HttpContent getSESS = new StringContent("");
-            HttpResponseMessage SESS = await client.PostAsync("http://218.75.197.123:83/Logon.do?method=logon&flag=sess", getSESS);
-            string SESStext = await SESS.Content.ReadAsStringAsync();
-
-            if(SESStext ==""|| SESStext==null)
+            HttpContent empty = new StringContent("");
+            HttpResponseMessage SESS = await client.PostAsync("http://218.75.197.123:83/Logon.do?method=logon&flag=sess", empty);
+            string SESStext = "";
+            for (int i = 0; i < 3; i++)
             {
-                MessageBox.Show("获取SESS失败！","错误",MessageBoxButtons.OK,MessageBoxIcon.Error);
+                SESStext = await SESS.Content.ReadAsStringAsync();
+                if (!(SESStext.Length > 100 || SESStext == "" || SESStext == null))
+                    break;
+                SESStext = "";
             }
 
-            statusBar.Value = 30;
+            if (SESStext == "")
+            {
+                MessageBox.Show("获取SESS失败！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
 
-            statusLabel.Text = "处理账号密码中……";
+            statusBar.Value += 20;
+
             //处理账户密码加密
-            string encodedString = EncodeString(SESStext, textBox_Account.Text, textBox_Password.Text);
+            string encodedString = "";
+            if (SESStext != "")
+            {
+                statusLabel.Text = "处理账号密码中……";
+                encodedString = EncodeString(SESStext, textBox_Account.Text, textBox_Password.Text);
+                statusBar.Value += 10;
+            }
 
-            statusBar.Value = 50;
 
             //组装Post请求Body
-            string postData = "loginMethod=logon&userlanguage=0&userAccount=" + textBox_Account.Text + "&userPassword=&encoded=" + WebUtility.UrlEncode(encodedString);
+            string authReslutString = "";
+            bool isError = false;
+            if (encodedString != "")
+            {
+                statusLabel.Text = "身份验证中……";
+                string postData = "loginMethod=logon&userlanguage=0&userAccount=" + textBox_Account.Text + "&userPassword=&encoded=" + WebUtility.UrlEncode(encodedString);
 
-            statusLabel.Text = "身份验证中……";
+                //Post身份验证
+                HttpContent content = new StringContent(postData);
+                content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+                HttpResponseMessage authReslut = await client.PostAsync("http://218.75.197.123:83/Logon.do?method=logon", content);
+                authReslutString = await authReslut.Content.ReadAsStringAsync();
 
-            //Post身份验证
-            HttpContent content = new StringContent(postData);
-            content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-            await client.PostAsync("http://218.75.197.123:83/Logon.do?method=logon", content);
+                //检测身份验证结果
+                HtmlDocument authReslutHTML = new HtmlDocument();
+                authReslutHTML.LoadHtml(authReslutString);
+                var authReslutNode = authReslutHTML.DocumentNode.SelectSingleNode("//font[@id='showMsg']");
+                if (authReslutNode !=null)
+                {
+                    MessageBox.Show("身份验证失败！\n" + authReslutNode.InnerText.Trim(), "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    isError = true;
+                }
+                else
+                {
+                    statusBar.Value += 20;
+                }
+            }
+            else
+            {
+                isError = true;
+            }
 
-            statusBar.Value = 60;
-
-            statusLabel.Text = "获取课表请求参数中……";
 
             //Get请求课表参数
-            HttpResponseMessage reKbParam= await client.GetAsync("http://jwxt.hut.edu.cn/jsxsd/framework/xsMainV_new.htmlx?t1=1");
-            string htmlKbParam=await reKbParam.Content.ReadAsStringAsync();
+            string kbURL = "";
+            if (isError !=true)
+            {
+                statusLabel.Text = "获取课表请求参数中……";
+                HttpResponseMessage reKbParam = await client.GetAsync("http://jwxt.hut.edu.cn/jsxsd/framework/xsMainV_new.htmlx?t1=1");
+                string htmlKbParam = await reKbParam.Content.ReadAsStringAsync();
 
-            //Post请求课表HTML（不要问我变量名为什么这么奇怪，问学校）
-            KbParam kbParam = GetKbParam(htmlKbParam);
-            string zhouci = kbParam.zhouci;
-            string kbjcmsid = kbParam.kbjcmsid;
-            string xnxq01id = kbParam.xnxq01id;
-            string kbURL = "http://jwxt.hut.edu.cn/jsxsd/framework/mainV_index_loadkb.htmlx?zc=" + zhouci + "&kbjcmsid=" + kbjcmsid + "&xnxq01id=" + xnxq01id + "&xswk=false";
+                //Post请求课表HTML（不要问我变量名为什么这么奇怪，问学校）
+                KbParam kbParam = GetKbParam(htmlKbParam);
+                string zhouci = kbParam.zhouci;
+                string kbjcmsid = kbParam.kbjcmsid;
+                string xnxq01id = kbParam.xnxq01id;
+                kbURL = "http://jwxt.hut.edu.cn/jsxsd/framework/mainV_index_loadkb.htmlx?zc=" + zhouci + "&kbjcmsid=" + kbjcmsid + "&xnxq01id=" + xnxq01id + "&xswk=false";
 
-            statusBar.Value = 70;
+                if (zhouci == "" || kbjcmsid == "" || xnxq01id == "")
+                {
+                    MessageBox.Show("解析课表参数失败！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    isError = true;
+                }
+                else
+                {
+                    statusBar.Value += 20;
+                }
+            }
+            else
+            {
+                isError = true;
+            }
 
-            statusLabel.Text = "请求课表中……";
+            if (isError!=true)
+            {
+                statusLabel.Text = "请求课表中……";
 
-            HttpResponseMessage response = await client.GetAsync(kbURL);
-            string result = await response.Content.ReadAsStringAsync();
+                HttpResponseMessage response = await client.GetAsync(kbURL);
+                string result = await response.Content.ReadAsStringAsync();
 
-            statusBar.Value = 80;
+                client.Dispose();
 
+                statusBar.Value += 10;
+
+                //解析课表HTML
+                ParseSchedule(result);
+
+                //保存配置
+                SaveSettings();
+
+                statusLabel.Text = "完成";
+
+                statusBar.Value += 10;
+            }
+
+        }
+
+        /// <summary>
+        /// 保存配置文件
+        /// </summary>
+        private void SaveSettings()
+        {
+            statusLabel.Text = "保存配置文件中……";
+
+            //账户密码写入配置文件
+            string path = "account.dat";
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(path))
+                {
+                    writer.WriteLine(EncodeString(textBox_Account.Text));
+                    writer.WriteLine(EncodeString(textBox_Password.Text));
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("发生错误： " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 解析课表HTML
+        /// </summary>
+        /// <param name="result">课表HTML</param>
+        private void ParseSchedule(string result)
+        {
             statusLabel.Text = "解析课表中……";
-
-            //解析课表HTML
             var html = new HtmlDocument();
             html.LoadHtml(result);
             var table = html.DocumentNode.SelectSingleNode("//table");
@@ -117,22 +211,22 @@ namespace HUT_Class_Schedule
                         var cell = cells[i].SelectSingleNode(".//div/ul/li");
                         var head = cells[i].SelectSingleNode(".//div/div[@class='index-title']");
                         Course course = new Course();
-                        if (cell!= null)
+                        if (cell != null)
                         {
-                            
+
                             course.courseName = cell.SelectSingleNode(".//div[@class='qz-hasCourse-title qz-ellipse']").InnerText.Trim();
 
                             // 课程详细信息
                             var infonodes = cell.SelectNodes(".//div[contains(@class, 'qz-hasCourse-detaillists')]/div");
                             foreach (var info in infonodes)
                             {
-                                course.courseInfo += info.InnerText.Trim()+"\n";
+                                course.courseInfo += info.InnerText.Trim() + "\n";
                             }
                             rowData.Add(course);
                         }
-                        else if(head!=null)
+                        else if (head != null)
                         {
-                            course.courseName=head.InnerText.Trim()+"\n";
+                            course.courseName = head.InnerText.Trim() + "\n";
                             course.courseInfo = head.InnerText.Trim() + "\n" + cells[i].SelectSingleNode(".//div/div[@class='index-detailtext']").InnerText.Trim() + "\n" + cells[i].SelectSingleNode(".//div/div[@class='index-detailtext qz-flex-row']/span").InnerText.Trim();
                             rowData.Add(course);
                         }
@@ -179,30 +273,7 @@ namespace HUT_Class_Schedule
             {
                 MessageBox.Show("解析课表失败！");
             }
-
             statusBar.Value = 90;
-
-            statusLabel.Text = "保存配置文件中……";
-
-            //账户密码写入配置文件
-            string path = "account.dat";
-            try
-            {
-                using (StreamWriter writer = new StreamWriter(path))
-                {
-                    writer.WriteLine(EncodeString(textBox_Account.Text));
-                    writer.WriteLine(EncodeString(textBox_Password.Text));
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("发生错误： " + ex.Message);
-            }
-
-            statusLabel.Text = "完成";
-
-            statusBar.Value = 100;
-
         }
 
         /// <summary>
@@ -238,28 +309,35 @@ namespace HUT_Class_Schedule
         /// <returns>加密的字符</returns>
         public static string EncodeString(string dataStr, string userAccount, string userPassword)
         {
-            string[] dataStrParts = dataStr.Split('#');
-            string scode = dataStrParts[0];
-            string sxh = dataStrParts[1];
-            string code = userAccount + "%%%" + userPassword;
-            string encoded = "";
-            for (int i = 0; i < code.Length; i++)
+            if (dataStr == "")
             {
-                if (i < 20)
-                {
-                    encoded +=
-                        code.Substring(i, 1) +
-                        scode.Substring(0, int.Parse(sxh.Substring(i, 1)));
-                    scode = scode.Substring(int.Parse(sxh.Substring(i, 1)), scode.Length - int.Parse(sxh.Substring(i, 1)));
-                }
-                else
-                {
-                    encoded += code.Substring(i, code.Length - i);
-                    i = code.Length;
-                }
+                return "";
             }
+            else
+            {
+                string[] parts = dataStr.Split('#');
+                string scode = parts[0];
+                string sxh = parts[1];
 
-            return encoded;
+                string code = userAccount + "%%%" + userPassword;
+                string encoded = "";
+
+                for (int i = 0; i < code.Length; i++)
+                {
+                    if (i < 20)
+                    {
+                        encoded += code[i] + scode.Substring(0, int.Parse(sxh[i].ToString()));
+                        scode = scode.Substring(int.Parse(sxh[i].ToString()), scode.Length - int.Parse(sxh[i].ToString()));
+                    }
+                    else
+                    {
+                        encoded += code.Substring(i);
+                        break;
+                    }
+                }
+
+                return encoded;
+            }
         }
 
         /// <summary>
@@ -288,7 +366,7 @@ namespace HUT_Class_Schedule
                 }
             }
 
-            KbParam kbParam = new KbParam(week.GetAttributeValue("value", ""), kbjcmsid.GetAttributeValue("data-value", ""), xnxq01idValue);
+            KbParam kbParam = new KbParam(week?.GetAttributeValue("value", "") ?? "", kbjcmsid?.GetAttributeValue("data-value", "") ?? "", xnxq01idValue ?? "");
             return kbParam;
         }
 
@@ -381,7 +459,7 @@ namespace HUT_Class_Schedule
         /// <param name="zhouci">课表周次</param>
         /// <param name="kbjcmsid">课表ID</param>
         /// <param name="xnxq01id">学期</param>
-        public KbParam(string zhouci,string kbjcmsid,string xnxq01id)
+        public KbParam(string zhouci, string kbjcmsid, string xnxq01id)
         {
             this.zhouci = zhouci;
             this.kbjcmsid = kbjcmsid;

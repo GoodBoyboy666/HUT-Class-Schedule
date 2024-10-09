@@ -15,8 +15,8 @@
 	<NeutralLanguage>zh-Hans</NeutralLanguage>
 	<StartupObject>HUT_Class_Schedule.Program</StartupObject>
 	<Deterministic>False</Deterministic>
-	<AssemblyVersion>2.0.0.0</AssemblyVersion>
-	<FileVersion>2.0.0.0</FileVersion>
+	<AssemblyVersion>2.0.1.0</AssemblyVersion>
+	<FileVersion>2.0.1.0</FileVersion>
 	<SignAssembly>True</SignAssembly>
 	<Copyright>Produced by GoodBoyboy</Copyright>
   </PropertyGroup>

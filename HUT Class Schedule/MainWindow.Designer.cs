@@ -293,7 +293,7 @@
             MaximizeBox = false;
             Name = "MainWindow";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "湖工大课表 2.0";
+            Text = "湖工大课表 2.0.1";
             Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)Schedule).EndInit();
             menuStrip1.ResumeLayout(false);
