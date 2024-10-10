@@ -48,6 +48,7 @@
             menuStrip1 = new MenuStrip();
             主页ToolStripMenuItem = new ToolStripMenuItem();
             关于ToolStripMenuItem = new ToolStripMenuItem();
+            检查更新ToolStripMenuItem = new ToolStripMenuItem();
             statusStrip1 = new StatusStrip();
             statusBar = new ToolStripProgressBar();
             statusLabel = new ToolStripStatusLabel();
@@ -163,7 +164,7 @@
             More_Info.Name = "More_Info";
             More_Info.ReadOnly = true;
             More_Info.Size = new Size(192, 426);
-            More_Info.TabIndex = 1;
+            More_Info.TabIndex = 7;
             More_Info.Text = "";
             // 
             // textBox_Account
@@ -171,7 +172,7 @@
             textBox_Account.Location = new Point(89, 44);
             textBox_Account.Name = "textBox_Account";
             textBox_Account.Size = new Size(164, 27);
-            textBox_Account.TabIndex = 2;
+            textBox_Account.TabIndex = 1;
             // 
             // textBox_Password
             // 
@@ -179,7 +180,7 @@
             textBox_Password.Name = "textBox_Password";
             textBox_Password.PasswordChar = '*';
             textBox_Password.Size = new Size(164, 27);
-            textBox_Password.TabIndex = 3;
+            textBox_Password.TabIndex = 2;
             // 
             // label1
             // 
@@ -204,7 +205,7 @@
             Get_Schedule.Location = new Point(852, 43);
             Get_Schedule.Name = "Get_Schedule";
             Get_Schedule.Size = new Size(161, 29);
-            Get_Schedule.TabIndex = 6;
+            Get_Schedule.TabIndex = 5;
             Get_Schedule.Text = "获取课表";
             Get_Schedule.UseVisualStyleBackColor = true;
             Get_Schedule.Click += Get_Schedule_Click;
@@ -223,7 +224,7 @@
             Show_Passwd.Location = new Point(530, 44);
             Show_Passwd.Name = "Show_Passwd";
             Show_Passwd.Size = new Size(94, 29);
-            Show_Passwd.TabIndex = 8;
+            Show_Passwd.TabIndex = 3;
             Show_Passwd.Text = "显示密码";
             Show_Passwd.UseVisualStyleBackColor = true;
             Show_Passwd.MouseDown += Show_Passwd_MouseDown;
@@ -232,7 +233,7 @@
             // menuStrip1
             // 
             menuStrip1.ImageScalingSize = new Size(20, 20);
-            menuStrip1.Items.AddRange(new ToolStripItem[] { 主页ToolStripMenuItem, 关于ToolStripMenuItem });
+            menuStrip1.Items.AddRange(new ToolStripItem[] { 主页ToolStripMenuItem, 关于ToolStripMenuItem, 检查更新ToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new Size(1223, 28);
@@ -252,6 +253,13 @@
             关于ToolStripMenuItem.Size = new Size(53, 24);
             关于ToolStripMenuItem.Text = "关于";
             关于ToolStripMenuItem.Click += 关于ToolStripMenuItem_Click;
+            // 
+            // 检查更新ToolStripMenuItem
+            // 
+            检查更新ToolStripMenuItem.Name = "检查更新ToolStripMenuItem";
+            检查更新ToolStripMenuItem.Size = new Size(83, 24);
+            检查更新ToolStripMenuItem.Text = "检查更新";
+            检查更新ToolStripMenuItem.Click += 检查更新ToolStripMenuItem_Click;
             // 
             // statusStrip1
             // 
@@ -291,16 +299,17 @@
             ZhouCicomboBox.Location = new Point(739, 44);
             ZhouCicomboBox.Name = "ZhouCicomboBox";
             ZhouCicomboBox.Size = new Size(68, 28);
-            ZhouCicomboBox.TabIndex = 12;
+            ZhouCicomboBox.TabIndex = 4;
             // 
             // logout
             // 
             logout.Location = new Point(1037, 44);
             logout.Name = "logout";
             logout.Size = new Size(90, 29);
-            logout.TabIndex = 13;
+            logout.TabIndex = 6;
             logout.Text = "退出登录";
             logout.UseVisualStyleBackColor = true;
+            logout.Visible = false;
             logout.Click += logout_Click;
             // 
             // MainWindow
@@ -327,7 +336,7 @@
             MaximizeBox = false;
             Name = "MainWindow";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "湖工大课表 v2.0.2";
+            Text = "湖工大课表 v2.0.3";
             Load += Form1_Load;
             ((System.ComponentModel.ISupportInitialize)Schedule).EndInit();
             menuStrip1.ResumeLayout(false);
@@ -366,5 +375,6 @@
         private Label label4;
         private ComboBox ZhouCicomboBox;
         private Button logout;
+        private ToolStripMenuItem 检查更新ToolStripMenuItem;
     }
 }

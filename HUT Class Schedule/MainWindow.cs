@@ -46,6 +46,10 @@ namespace HUT_Class_Schedule
                 //身份验证
                 isError = await Authentication();
             }
+            else
+            {
+                statusBar.Value += 20;
+            }
 
             //Get请求课表参数
             string kbURL = "";
@@ -59,9 +63,9 @@ namespace HUT_Class_Schedule
                 if (await GetSchedule(kbURL))
                 {
                     FINISH = true;
-                    textBox_Account.Enabled=false;
-                    textBox_Password.Enabled=false;
-                    logout.Visible=true;
+                    textBox_Account.Enabled = false;
+                    textBox_Password.Enabled = false;
+                    logout.Visible = true;
                 }
             }
 
@@ -86,7 +90,7 @@ namespace HUT_Class_Schedule
             HttpResponseMessage response = await client.GetAsync(kbURL);
             string result = await response.Content.ReadAsStringAsync();
 
-            statusBar.Value += 10;
+            statusBar.Value += 20;
 
             //解析课表HTML
             if (ParseSchedule(result))
@@ -142,78 +146,117 @@ namespace HUT_Class_Schedule
             return kbURL;
         }
 
+        #region 2.0.2版认证接口
+
         /// <summary>
         /// 身份认证
         /// </summary>
         /// <returns><是否完成身份认证/returns>
+        //private async Task<bool> Authentication()
+        //{
+        //    //获取SESS
+        //    await client.GetAsync("http://218.75.197.123:83/");
+
+        //    statusLabel.Text = "获取SESS中……";
+        //    statusBar.Value += 10;
+
+
+        //    HttpContent empty = new StringContent("");
+        //    HttpResponseMessage SESS = await client.PostAsync("http://218.75.197.123:83/Logon.do?method=logon&flag=sess", empty);
+        //    string SESStext = "";
+        //    for (int i = 0; i < 3; i++)
+        //    {
+        //        SESStext = await SESS.Content.ReadAsStringAsync();
+        //        if (!(SESStext.Length > 100 || SESStext == "" || SESStext == null))
+        //            break;
+        //        SESStext = "";
+        //    }
+
+        //    if (SESStext == "")
+        //    {
+        //        MessageBox.Show("获取SESS失败！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //    }
+
+        //    statusBar.Value += 20;
+
+        //    //处理账户密码加密
+        //    string encodedString = "";
+        //    if (SESStext != "")
+        //    {
+        //        statusLabel.Text = "处理账号密码中……";
+        //        encodedString = EncodeString(SESStext, textBox_Account.Text, textBox_Password.Text);
+        //        statusBar.Value += 10;
+        //    }
+
+
+        //    //组装Post请求Body
+        //    string authReslutString = "";
+        //    bool isError = false;
+        //    if (encodedString != "")
+        //    {
+        //        statusLabel.Text = "身份验证中……";
+        //        string postData = "loginMethod=logon&userlanguage=0&userAccount=" + textBox_Account.Text + "&userPassword=&encoded=" + WebUtility.UrlEncode(encodedString);
+
+        //        //Post身份验证
+        //        HttpContent content = new StringContent(postData);
+        //        content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+        //        HttpResponseMessage authReslut = await client.PostAsync("http://218.75.197.123:83/Logon.do?method=logon", content);
+        //        authReslutString = await authReslut.Content.ReadAsStringAsync();
+
+        //        //检测身份验证结果
+        //        HtmlDocument authReslutHTML = new HtmlDocument();
+        //        authReslutHTML.LoadHtml(authReslutString);
+        //        var authReslutNode = authReslutHTML.DocumentNode.SelectSingleNode("//font[@id='showMsg']");
+        //        if (authReslutNode != null)
+        //        {
+        //            MessageBox.Show("身份验证失败！\n" + authReslutNode.InnerText.Trim(), "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        //            isError = true;
+        //        }
+        //        else
+        //        {
+        //            statusBar.Value += 20;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        isError = true;
+        //    }
+
+        //    return isError;
+        //}
+
+        #endregion
+
         private async Task<bool> Authentication()
         {
-            //获取SESS
-            await client.GetAsync("http://218.75.197.123:83/");
-
-            statusLabel.Text = "获取SESS中……";
-            statusBar.Value += 10;
-
-
-            HttpContent empty = new StringContent("");
-            HttpResponseMessage SESS = await client.PostAsync("http://218.75.197.123:83/Logon.do?method=logon&flag=sess", empty);
-            string SESStext = "";
-            for (int i = 0; i < 3; i++)
-            {
-                SESStext = await SESS.Content.ReadAsStringAsync();
-                if (!(SESStext.Length > 100 || SESStext == "" || SESStext == null))
-                    break;
-                SESStext = "";
-            }
-
-            if (SESStext == "")
-            {
-                MessageBox.Show("获取SESS失败！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-
-            statusBar.Value += 20;
+            await client.GetAsync("http://jwxt.hut.edu.cn/jsxsd/");
 
             //处理账户密码加密
-            string encodedString = "";
-            if (SESStext != "")
-            {
-                statusLabel.Text = "处理账号密码中……";
-                encodedString = EncodeString(SESStext, textBox_Account.Text, textBox_Password.Text);
-                statusBar.Value += 10;
-            }
-
-
+            string encodingAccount = EncodeString(textBox_Account.Text);
+            string encodingPassword = EncodeString(textBox_Password.Text);
             //组装Post请求Body
-            string authReslutString = "";
+            string postData = "loginMethod=LoginToXk&userlanguage=0&userAccount=" + textBox_Account.Text + "&userPassword=&encoded=" + WebUtility.UrlEncode(encodingAccount + "%%%" + encodingPassword);
+
+            //Post身份验证
+            HttpContent content = new StringContent(postData);
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+
+            HttpResponseMessage authReslut = await client.PostAsync("http://jwxt.hut.edu.cn/jsxsd/xk/LoginToXk", content);
+
+            //检测身份验证结果
             bool isError = false;
-            if (encodedString != "")
+            HtmlDocument authReslutHTML = new HtmlDocument();
+            string authReslutString = await authReslut.Content.ReadAsStringAsync();
+            authReslutHTML.LoadHtml(authReslutString);
+            var authReslutNode = authReslutHTML.DocumentNode.SelectSingleNode("//font[@id='showMsg']");
+            if (authReslutNode != null)
             {
-                statusLabel.Text = "身份验证中……";
-                string postData = "loginMethod=logon&userlanguage=0&userAccount=" + textBox_Account.Text + "&userPassword=&encoded=" + WebUtility.UrlEncode(encodedString);
-
-                //Post身份验证
-                HttpContent content = new StringContent(postData);
-                content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
-                HttpResponseMessage authReslut = await client.PostAsync("http://218.75.197.123:83/Logon.do?method=logon", content);
-                authReslutString = await authReslut.Content.ReadAsStringAsync();
-
-                //检测身份验证结果
-                HtmlDocument authReslutHTML = new HtmlDocument();
-                authReslutHTML.LoadHtml(authReslutString);
-                var authReslutNode = authReslutHTML.DocumentNode.SelectSingleNode("//font[@id='showMsg']");
-                if (authReslutNode != null)
-                {
-                    MessageBox.Show("身份验证失败！\n" + authReslutNode.InnerText.Trim(), "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    isError = true;
-                }
-                else
-                {
-                    statusBar.Value += 20;
-                }
+                MessageBox.Show("身份验证失败！\n" + authReslutNode.InnerText.Trim(), "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                isError = true;
             }
             else
             {
-                isError = true;
+                statusBar.Value += 20;
             }
 
             return isError;
@@ -517,14 +560,19 @@ namespace HUT_Class_Schedule
         private void logout_Click(object sender, EventArgs e)
         {
             client.Dispose();
-            client=new HttpClient();
+            client = new HttpClient();
             kbjcmsid = "";
             xnxq01id = "";
-            FINISH=false;
-            textBox_Account.Enabled=true;
-            textBox_Password.Enabled=true;
+            FINISH = false;
+            textBox_Account.Enabled = true;
+            textBox_Password.Enabled = true;
             logout.Visible = false;
-            MessageBox.Show("您的账户已登出！","通知",MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("您的账户已登出！", "通知", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void 检查更新ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("explorer.exe", "https://git.goodboyboy.top/goodboyboy/HUT_Class_Schedule/releases");
         }
     }
 

@@ -103,7 +103,7 @@
             button1.Location = new Point(240, 427);
             button1.Name = "button1";
             button1.Size = new Size(94, 29);
-            button1.TabIndex = 6;
+            button1.TabIndex = 3;
             button1.Text = "项目仓库";
             button1.UseVisualStyleBackColor = true;
             button1.Click += button1_Click;
@@ -113,7 +113,7 @@
             button2.Location = new Point(18, 427);
             button2.Name = "button2";
             button2.Size = new Size(94, 29);
-            button2.TabIndex = 7;
+            button2.TabIndex = 1;
             button2.Text = "作者主页";
             button2.UseVisualStyleBackColor = true;
             button2.Click += button2_Click;
@@ -123,7 +123,7 @@
             button3.Location = new Point(128, 427);
             button3.Name = "button3";
             button3.Size = new Size(94, 29);
-            button3.TabIndex = 8;
+            button3.TabIndex = 2;
             button3.Text = "作者博客";
             button3.UseVisualStyleBackColor = true;
             button3.Click += button3_Click;
@@ -133,7 +133,7 @@
             button4.Location = new Point(348, 427);
             button4.Name = "button4";
             button4.Size = new Size(94, 29);
-            button4.TabIndex = 9;
+            button4.TabIndex = 4;
             button4.Text = "开源协议";
             button4.UseVisualStyleBackColor = true;
             button4.Click += button4_Click;
